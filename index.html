@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoTrack — Inkoop & Verkoop</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3347;
+    --accent: #e8a020;
+    --accent-dim: rgba(232,160,32,0.12);
+    --green: #22c55e;
+    --green-dim: rgba(34,197,94,0.12);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.12);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59,130,246,0.12);
+    --text: #f0f2f8;
+    --text-muted: #7b82a0;
+    --text-dim: #4a5170;
+    --radius: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* SIDEBAR */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-mark {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .logo-mark span { color: var(--accent); }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 2px;
+  }
+
+  .sidebar-nav { padding: 16px 10px; flex: 1; }
+
+  .nav-section {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    padding: 0 10px;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    font-weight: 500;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--accent-dim); color: var(--accent); }
+  .nav-item .icon { width: 16px; opacity: 0.8; flex-shrink: 0; }
+  .nav-item.active .icon { opacity: 1; }
+
+  .sidebar-stats {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .stat-mini { margin-bottom: 10px; }
+  .stat-mini-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+  .stat-mini-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .stat-mini-val.green { color: var(--green); }
+  .stat-mini-val.amber { color: var(--accent); }
+
+  /* MAIN */
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .topbar-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    padding: 8px 16px;
+    border-radius: 7px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary { background: var(--accent); color: #0f1117; }
+  .btn-primary:hover { background: #f5b030; }
+  .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-success { background: var(--green); color: #0f1117; }
+  .btn-success:hover { background: #16a34a; }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  .content { padding: 28px; }
+
+  /* DASHBOARD */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; }
+
+  .kpi-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .kpi-sub { font-size: 12px; color: var(--text-dim); }
+  .kpi-green { border-left: 3px solid var(--green); }
+  .kpi-amber { border-left: 3px solid var(--accent); }
+  .kpi-blue { border-left: 3px solid var(--blue); }
+  .kpi-red { border-left: 3px solid var(--red); }
+
+  /* TABLES */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  th {
+    background: var(--surface2);
+    padding: 11px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-green { background: var(--green-dim); color: var(--green); }
+  .badge-red { background: var(--red-dim); color: var(--red); }
+  .badge-amber { background: var(--accent-dim); color: var(--accent); }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); }
+
+  .kenteken-plate {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    background: #f5cc10;
+    color: #000;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    letter-spacing: 1px;
+  }
+
+  .profit-pos { color: var(--green); font-weight: 600; }
+  .profit-neg { color: var(--red); font-weight: 600; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    width: 560px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+    animation: slideUp 0.2s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-header {
+    padding: 22px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .modal-close {
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    background: var(--surface2);
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 24px; }
+
+  /* FORMS */
+  .form-group { margin-bottom: 18px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  input::placeholder { color: var(--text-dim); }
+
+  select option { background: var(--surface2); }
+
+  .kenteken-input-wrap {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .kenteken-input-wrap input {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    background: #1a1700;
+    border-color: #6b5900;
+    color: #f5cc10;
+    padding: 10px 14px;
+    flex: 1;
+  }
+
+  .kenteken-input-wrap input:focus {
+    border-color: #f5cc10;
+    box-shadow: 0 0 0 3px rgba(245,204,16,0.15);
+  }
+
+  .rdw-info-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 14px;
+    display: none;
+  }
+
+  .rdw-info-box.loaded { display: block; }
+  .rdw-info-box.loading { display: block; }
+  .rdw-info-box.error { display: block; border-color: var(--red); background: var(--red-dim); }
+
+  .rdw-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .rdw-field { }
+  .rdw-field-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px; }
+  .rdw-field-val { font-size: 13px; font-weight: 500; color: var(--text); }
+
+  .rdw-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .rdw-brand {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; background: var(--surface2); padding: 4px; border-radius: 9px; margin-bottom: 24px; }
+
+  .tab {
+    flex: 1;
+    padding: 9px 16px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  /* SEARCH BAR */
+  .search-bar {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .search-bar input {
+    padding-left: 36px;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  /* PROFIT OVERVIEW */
+  .profit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+  }
+
+  .profit-row:last-child { border-bottom: none; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-dim);
+  }
+
+  .empty-state .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-state p { font-size: 13px; }
+
+  /* VERKOOP MODAL EXTRA */
+  .sale-car-preview {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .sale-car-preview .plate { font-size: 16px; }
+
+  .notif {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    box-shadow: var(--shadow);
+    z-index: 999;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideUp 0.2s ease;
+    max-width: 320px;
+  }
+
+  .notif.success { border-left: 3px solid var(--green); }
+  .notif.error { border-left: 3px solid var(--red); }
+
+  @media (max-width: 900px) {
+    .sidebar { width: 60px; }
+    .sidebar-logo, .logo-sub, .nav-item span, .sidebar-stats { display: none; }
+    .main { margin-left: 60px; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">Auto<span>Track</span></div>
+      <div class="logo-sub">Voertuigbeheer</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Beheer</div>
+      <div class="nav-item active" onclick="showView('dashboard')">
+        <span style="width:16px;display:inline-block"></span><svg class="icon" style="display:none" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+        <span>Dashboard</span>
+      </div>
+      <div class="nav-item" onclick="showView('inkoop')">
+        <span style="width:16px;display:inline-block"></span><svg class="icon" style="display:none" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 4h4l-3.3 2.4 1.3 4-3-2.2-3 2.2 1.3-4L4 5h4z" opacity="0.3"/><path d="M2 14h12M4 10l1-3M12 10l-1-3M7 7h2"/><rect x="1" y="11" width="14" height="2" rx="1"/><path d="M3 11l1-4h8l1 4"/><circle cx="5" cy="13" r="1.5" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="11" cy="13" r="1.5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+        <span>Inkoop</span>
+      </div>
+      <div class="nav-item" onclick="showView('verkoop')">
+        <span style="width:16px;display:inline-block"></span><svg class="icon" style="display:none" viewBox="0 0 16 16" fill="currentColor"><path d="M1 4h14v9a1 1 0 01-1 1H2a1 1 0 01-1-1V4z" opacity="0.3"/><path d="M1 4h14M5 4V2h6v2"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Verkoop</span>
+      </div>
+      <div class="nav-section">Financieel</div>
+      <div class="nav-item" onclick="showView('winst')">
+        <span style="width:16px;display:inline-block"></span><svg class="icon" style="display:none" viewBox="0 0 16 16" fill="currentColor"><path d="M2 12L6 7l3 3 5-6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span>Winst & Verlies</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-stats">
+      <div class="stat-mini">
+        <div class="stat-mini-label">Voorraad</div>
+        <div class="stat-mini-val amber" id="sb-voorraad">0</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-label">Winst (totaal)</div>
+        <div class="stat-mini-val green" id="sb-winst">€0</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openInkoopModal()">
+          + Inkoop
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="openVerkoopModal()">
+          + Verkoop
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD VIEW -->
+      <div id="view-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-amber">
+            <div class="kpi-label">In voorraad</div>
+            <div class="kpi-value" id="kpi-voorraad">0</div>
+            <div class="kpi-sub">voertuigen beschikbaar</div>
+          </div>
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-label">Ingekocht</div>
+            <div class="kpi-value" id="kpi-ingekocht">0</div>
+            <div class="kpi-sub">totaal dit jaar</div>
+          </div>
+          <div class="kpi-card kpi-green">
+            <div class="kpi-label">Verkocht</div>
+            <div class="kpi-value" id="kpi-verkocht">0</div>
+            <div class="kpi-sub">totaal dit jaar</div>
+          </div>
+          <div class="kpi-card kpi-green">
+            <div class="kpi-label">Totale winst</div>
+            <div class="kpi-value" id="kpi-winst">€0</div>
+            <div class="kpi-sub">gerealiseerd</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">Recente activiteit</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Kenteken</th>
+                <th>Merk & Model</th>
+                <th>Actie</th>
+                <th>Bedrag</th>
+                <th>Datum</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-recent">
+              <tr><td colspan="5"><div class="empty-state"><div class="empty-icon"></div><p>Nog geen transacties. Voeg een inkoop of verkoop toe.</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- INKOOP VIEW -->
+      <div id="view-inkoop" style="display:none">
+        <div class="section-header">
+          <div class="section-title">Ingekochte voertuigen</div>
+          <button class="btn btn-primary btn-sm" onclick="openInkoopModal()">+ Inkoop toevoegen</button>
+        </div>
+        <div class="search-bar">
+          <span class="search-icon"></span>
+          <input type="text" placeholder="Zoek op kenteken, merk of model…" oninput="filterTable('inkoop', this.value)">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Kenteken</th>
+                <th>Merk & Model</th>
+                <th>Bouwjaar</th>
+                <th>Brandstof</th>
+                <th>KM-stand</th>
+                <th>Inkoopprijs</th>
+                <th>Status</th>
+                <th>Datum</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbl-inkoop">
+              <tr><td colspan="9"><div class="empty-state"><div class="empty-icon"></div><p>Geen ingekochte voertuigen.</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VERKOOP VIEW -->
+      <div id="view-verkoop" style="display:none">
+        <div class="section-header">
+          <div class="section-title">Verkochte voertuigen</div>
+          <button class="btn btn-primary btn-sm" onclick="openVerkoopModal()">+ Verkoop registreren</button>
+        </div>
+        <div class="search-bar">
+          <span class="search-icon"></span>
+          <input type="text" placeholder="Zoek op kenteken, merk of model…" oninput="filterTable('verkoop', this.value)">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Kenteken</th>
+                <th>Merk & Model</th>
+                <th>Inkoopprijs</th>
+                <th>Verkoopprijs</th>
+                <th>Winst</th>
+                <th>Koper</th>
+                <th>Datum</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-verkoop">
+              <tr><td colspan="7"><div class="empty-state"><div class="empty-icon"></div><p>Geen verkochte voertuigen.</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- WINST VIEW -->
+      <div id="view-winst" style="display:none">
+        <div class="kpi-grid" style="grid-template-columns: repeat(3,1fr)">
+          <div class="kpi-card kpi-green">
+            <div class="kpi-label">Totale omzet</div>
+            <div class="kpi-value" id="kpi-omzet">€0</div>
+            <div class="kpi-sub">verkoopopbrengsten</div>
+          </div>
+          <div class="kpi-card kpi-red">
+            <div class="kpi-label">Totale inkoop</div>
+            <div class="kpi-value" id="kpi-kosten">€0</div>
+            <div class="kpi-sub">inkoopkosten</div>
+          </div>
+          <div class="kpi-card kpi-green">
+            <div class="kpi-label">Netto winst</div>
+            <div class="kpi-value" id="kpi-netto">€0</div>
+            <div class="kpi-sub">gerealiseerd</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">Winstoverzicht per voertuig</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Kenteken</th>
+                <th>Voertuig</th>
+                <th>Inkoopprijs</th>
+                <th>Verkoopprijs</th>
+                <th>Winst/Verlies</th>
+                <th>Marge %</th>
+                <th>Verkoopdat.</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-winst">
+              <tr><td colspan="7"><div class="empty-state"><div class="empty-icon"></div><p>Nog geen verkopen geregistreerd.</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- INKOOP MODAL -->
+<div class="modal-overlay" id="modal-inkoop">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Voertuig inkopen</div>
+      <button class="modal-close" onclick="closeModal('modal-inkoop')"> x </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-group">
+        <label>Kenteken (NL automatisch ophalen)</label>
+        <div class="kenteken-input-wrap">
+          <input type="text" id="inp-kenteken" placeholder="AB-123-C" maxlength="10"
+            oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, '')"
+            onblur="lookupKenteken()">
+          <button class="btn btn-ghost" onclick="lookupKenteken()" style="white-space:nowrap"> Ophalen</button>
+        </div>
+        <div id="rdw-box" class="rdw-info-box">
+          <div id="rdw-content"></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Merk</label>
+          <input type="text" id="inp-merk" placeholder="bijv. Volkswagen">
+        </div>
+        <div class="form-group">
+          <label>Model</label>
+          <input type="text" id="inp-model" placeholder="bijv. Golf">
+        </div>
+      </div>
+
+      <div class="form-row three">
+        <div class="form-group">
+          <label>Bouwjaar</label>
+          <input type="number" id="inp-bouwjaar" placeholder="2019" min="1980" max="2030">
+        </div>
+        <div class="form-group">
+          <label>Brandstof</label>
+          <select id="inp-brandstof">
+            <option value="">— kies —</option>
+            <option>Benzine</option>
+            <option>Diesel</option>
+            <option>Elektrisch</option>
+            <option>Hybride</option>
+            <option>LPG</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kleur</label>
+          <input type="text" id="inp-kleur" placeholder="bijv. Zwart">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>KM-stand</label>
+          <input type="number" id="inp-km" placeholder="75000">
+        </div>
+        <div class="form-group">
+          <label>Vermogen (PK)</label>
+          <input type="number" id="inp-pk" placeholder="150">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Inkoopprijs (€)</label>
+          <input type="number" id="inp-inkoopprijs" placeholder="12500" step="50">
+        </div>
+        <div class="form-group">
+          <label>Verkoper / Herkomst</label>
+          <input type="text" id="inp-verkoper" placeholder="naam of veiling">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Inkoopdatum</label>
+          <input type="date" id="inp-inkoopdat">
+        </div>
+        <div class="form-group">
+          <label>Vraagprijs (€)</label>
+          <input type="number" id="inp-vraagprijs" placeholder="15900" step="50">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Notities</label>
+        <textarea id="inp-notities" rows="2" placeholder="Extra details, schades, opties…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-inkoop')">Annuleren</button>
+      <button class="btn btn-primary" onclick="saveInkoop()"> Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- VERKOOP MODAL -->
+<div class="modal-overlay" id="modal-verkoop">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Verkoop registreren</div>
+      <button class="modal-close" onclick="closeModal('modal-verkoop')"> x </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-group">
+        <label>Voertuig selecteren</label>
+        <select id="sel-voertuig" onchange="previewVoertuig(this.value)">
+          <option value="">— kies uit voorraad —</option>
+        </select>
+      </div>
+
+      <div id="sale-preview" class="sale-car-preview" style="display:none">
+        <span class="kenteken-plate" id="preview-plate">—</span>
+        <div>
+          <div style="font-weight:600;font-size:14px" id="preview-naam">—</div>
+          <div style="color:var(--text-muted);font-size:12px">Inkoopprijs: <span id="preview-inkoop">—</span></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Verkoopprijs (€)</label>
+          <input type="number" id="inp-verkoopprijs" placeholder="15900" step="50" oninput="updateWinstPreview()">
+        </div>
+        <div class="form-group">
+          <label>Verkoopdatum</label>
+          <input type="date" id="inp-verkoopdatum">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Naam koper</label>
+        <input type="text" id="inp-koper" placeholder="bijv. J. de Vries">
+      </div>
+
+      <div id="winst-preview" style="display:none;background:var(--surface2);border-radius:8px;padding:14px;margin-top:4px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="color:var(--text-muted);font-size:13px">Verwachte winst</span>
+          <span style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700" id="winst-calc">—</span>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:16px">
+        <label>Notities</label>
+        <textarea id="inp-verkoop-notities" rows="2" placeholder="Betaalmethode, garantie, opmerkingen…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-verkoop')">Annuleren</button>
+      <button class="btn btn-success" onclick="saveVerkoop()"> Bevestigen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let inkoop = JSON.parse(localStorage.getItem('at_inkoop') || '[]');
+let verkoop = JSON.parse(localStorage.getItem('at_verkoop') || '[]');
+
+function save() {
+  localStorage.setItem('at_inkoop', JSON.stringify(inkoop));
+  localStorage.setItem('at_verkoop', JSON.stringify(verkoop));
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+function showView(name) {
+  ['dashboard','inkoop','verkoop','winst'].forEach(v => {
+    document.getElementById('view-' + v).style.display = v === name ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach((el, i) => el.classList.remove('active'));
+  const items = document.querySelectorAll('.nav-item');
+  const map = {dashboard:0, inkoop:1, verkoop:2, winst:3};
+  items[map[name]].classList.add('active');
+  document.getElementById('topbar-title').textContent =
+    {dashboard:'Dashboard', inkoop:'Inkoop', verkoop:'Verkoop', winst:'Winst & Verlies'}[name];
+  renderAll();
+}
+
+// KENTEKEN LOOKUP via RDW Open Data API (werkt alleen via webserver, niet via file://)
+async function lookupKenteken() {
+  const raw = document.getElementById('inp-kenteken').value.trim();
+  const kenteken = raw.replace(/-/g, '').toUpperCase();
+  if (kenteken.length < 6) return;
+
+  const box = document.getElementById('rdw-box');
+  const cnt = document.getElementById('rdw-content');
+  box.className = 'rdw-info-box loading';
+  cnt.innerHTML = '<span class="spinner"></span> Gegevens ophalen via RDW…';
+
+  try {
+    const [res, bRes] = await Promise.all([
+      fetch('https://opendata.rdw.nl/resource/m9d7-ebf2.json?kenteken=' + kenteken),
+      fetch('https://opendata.rdw.nl/resource/8ys7-d773.json?kenteken=' + kenteken)
+    ]);
+
+    if (!res.ok) throw new Error('RDW HTTP ' + res.status);
+
+    const [data, bData] = await Promise.all([res.json(), bRes.json()]);
+
+    if (!data || data.length === 0) throw new Error('Kenteken niet gevonden');
+
+    const v = data[0];
+    const b = bData && bData.length > 0 ? bData[0] : {};
+
+    const merk      = capitalize(v.merk || '');
+    const model     = capitalize(v.handelsbenaming || '');
+    const bouwjaar  = (v.datum_eerste_toelating || '').substring(0, 4);
+    const kleur     = capitalize(v.eerste_kleur || '');
+    const brandstof = capitalize(b.brandstof_omschrijving || '');
+    const pkRaw     = parseFloat(v.vermogen_massarijklaar);
+    const pk        = pkRaw ? Math.round(pkRaw * 1.36) : '';
+    const apkRaw    = v.vervaldatum_apk || '';
+    const apk       = apkRaw.length >= 8
+      ? apkRaw.substring(6,8) + '-' + apkRaw.substring(4,6) + '-' + apkRaw.substring(0,4) : '';
+    const gewicht   = v.massa_rijklaar || '';
+    const co2       = b.co2_uitstoot_gecombineerd || '';
+
+    if (merk)      document.getElementById('inp-merk').value      = merk;
+    if (model)     document.getElementById('inp-model').value     = model;
+    if (bouwjaar)  document.getElementById('inp-bouwjaar').value  = bouwjaar;
+    if (kleur)     document.getElementById('inp-kleur').value     = kleur;
+    if (pk)        document.getElementById('inp-pk').value        = pk;
+    if (brandstof) {
+      const sel = document.getElementById('inp-brandstof');
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].text.toLowerCase() === brandstof.toLowerCase()) {
+          sel.value = sel.options[i].value; break;
+        }
+      }
+    }
+
+    box.className = 'rdw-info-box loaded';
+    cnt.innerHTML =
+      '<div class="rdw-header">' +
+        '<span class="kenteken-plate">' + formatPlate(kenteken) + '</span>' +
+        '<span class="rdw-brand">' + merk + ' ' + model + '</span>' +
+        '<span class="badge badge-green">Gevonden (RDW)</span>' +
+      '</div><div class="rdw-grid">' +
+        field('Bouwjaar', bouwjaar) +
+        field('Kleur', kleur) +
+        field('Brandstof', brandstof || '—') +
+        field('Vermogen', pk ? pk + ' PK' : '—') +
+        field('APK tot', apk || '—') +
+        field('Gewicht', gewicht ? gewicht + ' kg' : '—') +
+        field('CO₂', co2 ? co2 + ' g/km' : '—') +
+      '</div>';
+
+  } catch (e) {
+    box.className = 'rdw-info-box error';
+    if (e.message.includes('Load failed') || e.message.includes('fetch') || e.message.includes('Failed')) {
+      cnt.innerHTML =
+        '<strong>Open dit bestand via een webserver</strong> — de RDW lookup werkt niet via file://.<br><br>' +
+        'Eenvoudigste oplossing: sleep het HTML-bestand naar <a href="https://tiiny.host" target="_blank" style="color:#e8a020">tiiny.host</a> ' +
+        'of open via <code>npx serve .</code> in de terminal.';
+    } else {
+      cnt.innerHTML = 'Fout: ' + e.message;
+    }
+  }
+}
+
+
+function field(label, val) {
+  return `<div class="rdw-field"><div class="rdw-field-label">${label}</div><div class="rdw-field-val">${val || '—'}</div></div>`;
+}
+
+function capitalize(s) {
+  if (!s) return '';
+  return s.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function formatDate(d) {
+  if (!d || d.length < 8) return d;
+  return d.substring(6,8) + '-' + d.substring(4,6) + '-' + d.substring(0,4);
+}
+
+function formatPlate(k) {
+  // Basic formatter: try to add dashes
+  if (k.includes('-')) return k;
+  if (k.length === 6) return k.substring(0,2) + '-' + k.substring(2,5) + '-' + k.substring(5);
+  return k;
+}
+
+function formatEuro(n) {
+  return '€' + Number(n).toLocaleString('nl-NL', {minimumFractionDigits: 0});
+}
+
+// ── MODAL HELPERS ──────────────────────────────────────────────────────────
+function openInkoopModal() {
+  // Reset form
+  ['inp-kenteken','inp-merk','inp-model','inp-bouwjaar','inp-kleur','inp-km','inp-pk',
+   'inp-inkoopprijs','inp-verkoper','inp-vraagprijs','inp-notities'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('inp-brandstof').value = '';
+  document.getElementById('inp-inkoopdat').value = today();
+  document.getElementById('rdw-box').className = 'rdw-info-box';
+  document.getElementById('rdw-content').innerHTML = '';
+  document.getElementById('modal-inkoop').classList.add('open');
+}
+
+function openVerkoopModal() {
+  const voorraad = inkoop.filter(v => !verkoop.find(s => s.id === v.id));
+  const sel = document.getElementById('sel-voertuig');
+  sel.innerHTML = '<option value="">— kies uit voorraad —</option>';
+  voorraad.forEach(v => {
+    sel.innerHTML += `<option value="${v.id}">${formatPlate(v.kenteken)} — ${v.merk} ${v.model}</option>`;
+  });
+  document.getElementById('inp-verkoopprijs').value = '';
+  document.getElementById('inp-verkoopdatum').value = today();
+  document.getElementById('inp-koper').value = '';
+  document.getElementById('inp-verkoop-notities').value = '';
+  document.getElementById('sale-preview').style.display = 'none';
+  document.getElementById('winst-preview').style.display = 'none';
+
+  if (voorraad.length === 0) {
+    showNotif('Geen voertuigen in voorraad om te verkopen.', 'error');
+    return;
+  }
+  document.getElementById('modal-verkoop').classList.add('open');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
+// ── SAVE INKOOP ────────────────────────────────────────────────────────────
+function saveInkoop() {
+  const kenteken = document.getElementById('inp-kenteken').value.trim().replace(/-/g,'').toUpperCase();
+  const merk = document.getElementById('inp-merk').value.trim();
+  const model = document.getElementById('inp-model').value.trim();
+  const inkoopprijs = parseFloat(document.getElementById('inp-inkoopprijs').value);
+
+  if (!kenteken || !merk || !inkoopprijs) {
+    showNotif('Vul minimaal kenteken, merk en inkoopprijs in.', 'error'); return;
+  }
+
+  const record = {
+    id: Date.now().toString(),
+    kenteken,
+    merk,
+    model: document.getElementById('inp-model').value.trim(),
+    bouwjaar: document.getElementById('inp-bouwjaar').value,
+    brandstof: document.getElementById('inp-brandstof').value,
+    kleur: document.getElementById('inp-kleur').value.trim(),
+    km: document.getElementById('inp-km').value,
+    pk: document.getElementById('inp-pk').value,
+    inkoopprijs,
+    vraagprijs: parseFloat(document.getElementById('inp-vraagprijs').value) || 0,
+    verkoper: document.getElementById('inp-verkoper').value.trim(),
+    inkoopdat: document.getElementById('inp-inkoopdat').value,
+    notities: document.getElementById('inp-notities').value.trim(),
+    datum: new Date().toISOString()
+  };
+
+  inkoop.push(record);
+  save();
+  closeModal('modal-inkoop');
+  renderAll();
+  showNotif(`${merk} ${model} (${formatPlate(kenteken)}) toegevoegd aan inkoop.`, 'success');
+}
+
+// ── SAVE VERKOOP ───────────────────────────────────────────────────────────
+function previewVoertuig(id) {
+  const v = inkoop.find(x => x.id === id);
+  const preview = document.getElementById('sale-preview');
+  if (!v) { preview.style.display = 'none'; return; }
+  preview.style.display = 'flex';
+  document.getElementById('preview-plate').textContent = formatPlate(v.kenteken);
+  document.getElementById('preview-naam').textContent = `${v.merk} ${v.model} (${v.bouwjaar})`;
+  document.getElementById('preview-inkoop').textContent = formatEuro(v.inkoopprijs);
+  if (v.vraagprijs) document.getElementById('inp-verkoopprijs').value = v.vraagprijs;
+  updateWinstPreview();
+}
+
+function updateWinstPreview() {
+  const id = document.getElementById('sel-voertuig').value;
+  const v = inkoop.find(x => x.id === id);
+  const prijs = parseFloat(document.getElementById('inp-verkoopprijs').value);
+  const wp = document.getElementById('winst-preview');
+  if (!v || !prijs) { wp.style.display = 'none'; return; }
+  wp.style.display = '';
+  const winst = prijs - v.inkoopprijs;
+  const el = document.getElementById('winst-calc');
+  el.textContent = (winst >= 0 ? '+' : '') + formatEuro(winst);
+  el.style.color = winst >= 0 ? 'var(--green)' : 'var(--red)';
+}
+
+function saveVerkoop() {
+  const id = document.getElementById('sel-voertuig').value;
+  const verkoopprijs = parseFloat(document.getElementById('inp-verkoopprijs').value);
+  const koper = document.getElementById('inp-koper').value.trim();
+
+  if (!id || !verkoopprijs) {
+    showNotif('Selecteer een voertuig en vul de verkoopprijs in.', 'error'); return;
+  }
+
+  const v = inkoop.find(x => x.id === id);
+  const record = {
+    id,
+    verkoopprijs,
+    koper,
+    verkoopdatum: document.getElementById('inp-verkoopdatum').value,
+    notities: document.getElementById('inp-verkoop-notities').value.trim(),
+    datum: new Date().toISOString()
+  };
+
+  verkoop.push(record);
+  save();
+  closeModal('modal-verkoop');
+  renderAll();
+  const winst = verkoopprijs - v.inkoopprijs;
+  showNotif(`${v.merk} ${v.model} verkocht! Winst: ${formatEuro(winst)}`, 'success');
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderKPIs();
+  renderRecent();
+  renderInkoop(inkoop);
+  renderVerkoop();
+  renderWinst();
+  updateSidebar();
+}
+
+function renderKPIs() {
+  const voorraad = inkoop.filter(v => !verkoop.find(s => s.id === v.id));
+  const totalWinst = verkoop.reduce((sum, s) => {
+    const v = inkoop.find(x => x.id === s.id);
+    return sum + (v ? s.verkoopprijs - v.inkoopprijs : 0);
+  }, 0);
+  document.getElementById('kpi-voorraad').textContent = voorraad.length;
+  document.getElementById('kpi-ingekocht').textContent = inkoop.length;
+  document.getElementById('kpi-verkocht').textContent = verkoop.length;
+  document.getElementById('kpi-winst').textContent = formatEuro(totalWinst);
+}
+
+function renderRecent() {
+  const events = [];
+  inkoop.slice(-5).forEach(v => events.push({type:'inkoop', v, datum: v.datum}));
+  verkoop.slice(-5).forEach(s => {
+    const v = inkoop.find(x => x.id === s.id);
+    if (v) events.push({type:'verkoop', v, s, datum: s.datum});
+  });
+  events.sort((a,b) => new Date(b.datum) - new Date(a.datum));
+
+  const tbody = document.getElementById('tbl-recent');
+  if (!events.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon"></div><p>Nog geen transacties.</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = events.slice(0,8).map(e => {
+    const plate = `<span class="kenteken-plate">${formatPlate(e.v.kenteken)}</span>`;
+    const naam = `${e.v.merk} ${e.v.model}`;
+    const badge = e.type === 'inkoop'
+      ? '<span class="badge badge-blue">Inkoop</span>'
+      : '<span class="badge badge-green">Verkoop</span>';
+    const bedrag = e.type === 'inkoop'
+      ? `<span style="color:var(--red)">${formatEuro(e.v.inkoopprijs)}</span>`
+      : `<span style="color:var(--green)">+${formatEuro(e.s.verkoopprijs)}</span>`;
+    const datum = new Date(e.datum).toLocaleDateString('nl-NL');
+    return `<tr><td>${plate}</td><td>${naam}</td><td>${badge}</td><td>${bedrag}</td><td>${datum}</td></tr>`;
+  }).join('');
+}
+
+function renderInkoop(list) {
+  const tbody = document.getElementById('tbl-inkoop');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon"></div><p>Geen ingekochte voertuigen.</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(v => {
+    const isSold = verkoop.find(s => s.id === v.id);
+    const status = isSold
+      ? '<span class="badge badge-green">Verkocht</span>'
+      : '<span class="badge badge-amber">In voorraad</span>';
+    const km = v.km ? Number(v.km).toLocaleString('nl-NL') + ' km' : '—';
+    return `<tr>
+      <td><span class="kenteken-plate">${formatPlate(v.kenteken)}</span></td>
+      <td><strong>${v.merk}</strong> ${v.model}</td>
+      <td>${v.bouwjaar || '—'}</td>
+      <td>${v.brandstof || '—'}</td>
+      <td>${km}</td>
+      <td>${formatEuro(v.inkoopprijs)}</td>
+      <td>${status}</td>
+      <td>${v.inkoopdat ? new Date(v.inkoopdat).toLocaleDateString('nl-NL') : '—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="deleteInkoop('${v.id}')"> - </button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderVerkoop() {
+  const tbody = document.getElementById('tbl-verkoop');
+  if (!verkoop.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon"></div><p>Geen verkopen.</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = verkoop.map(s => {
+    const v = inkoop.find(x => x.id === s.id);
+    if (!v) return '';
+    const winst = s.verkoopprijs - v.inkoopprijs;
+    return `<tr>
+      <td><span class="kenteken-plate">${formatPlate(v.kenteken)}</span></td>
+      <td><strong>${v.merk}</strong> ${v.model}</td>
+      <td>${formatEuro(v.inkoopprijs)}</td>
+      <td>${formatEuro(s.verkoopprijs)}</td>
+      <td class="${winst >= 0 ? 'profit-pos' : 'profit-neg'}">${winst >= 0 ? '+' : ''}${formatEuro(winst)}</td>
+      <td>${s.koper || '—'}</td>
+      <td>${s.verkoopdatum ? new Date(s.verkoopdatum).toLocaleDateString('nl-NL') : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderWinst() {
+  let omzet = 0, kosten = 0;
+  const tbody = document.getElementById('tbl-winst');
+  if (!verkoop.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon"></div><p>Nog geen verkopen.</p></div></td></tr>';
+    document.getElementById('kpi-omzet').textContent = '€0';
+    document.getElementById('kpi-kosten').textContent = '€0';
+    document.getElementById('kpi-netto').textContent = '€0';
+    return;
+  }
+  tbody.innerHTML = verkoop.map(s => {
+    const v = inkoop.find(x => x.id === s.id);
+    if (!v) return '';
+    const winst = s.verkoopprijs - v.inkoopprijs;
+    const marge = ((winst / v.inkoopprijs) * 100).toFixed(1);
+    omzet += s.verkoopprijs;
+    kosten += v.inkoopprijs;
+    return `<tr>
+      <td><span class="kenteken-plate">${formatPlate(v.kenteken)}</span></td>
+      <td>${v.merk} ${v.model}</td>
+      <td>${formatEuro(v.inkoopprijs)}</td>
+      <td>${formatEuro(s.verkoopprijs)}</td>
+      <td class="${winst >= 0 ? 'profit-pos' : 'profit-neg'}">${winst >= 0 ? '+' : ''}${formatEuro(winst)}</td>
+      <td class="${winst >= 0 ? 'profit-pos' : 'profit-neg'}">${marge}%</td>
+      <td>${s.verkoopdatum ? new Date(s.verkoopdatum).toLocaleDateString('nl-NL') : '—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('kpi-omzet').textContent = formatEuro(omzet);
+  document.getElementById('kpi-kosten').textContent = formatEuro(kosten);
+  const netto = omzet - kosten;
+  const nettoEl = document.getElementById('kpi-netto');
+  nettoEl.textContent = formatEuro(netto);
+  nettoEl.style.color = netto >= 0 ? 'var(--green)' : 'var(--red)';
+}
+
+function updateSidebar() {
+  const voorraad = inkoop.filter(v => !verkoop.find(s => s.id === v.id));
+  const winst = verkoop.reduce((sum, s) => {
+    const v = inkoop.find(x => x.id === s.id);
+    return sum + (v ? s.verkoopprijs - v.inkoopprijs : 0);
+  }, 0);
+  document.getElementById('sb-voorraad').textContent = voorraad.length;
+  document.getElementById('sb-winst').textContent = formatEuro(winst);
+}
+
+function deleteInkoop(id) {
+  const isSold = verkoop.find(s => s.id === id);
+  if (isSold) { showNotif('Verkocht voertuig kan niet verwijderd worden.', 'error'); return; }
+  if (!confirm('Voertuig verwijderen uit inkoop?')) return;
+  inkoop = inkoop.filter(v => v.id !== id);
+  save();
+  renderAll();
+}
+
+// ── FILTER ─────────────────────────────────────────────────────────────────
+function filterTable(type, q) {
+  const lq = q.toLowerCase();
+  if (type === 'inkoop') {
+    const filtered = inkoop.filter(v =>
+      v.kenteken.toLowerCase().includes(lq) ||
+      v.merk.toLowerCase().includes(lq) ||
+      (v.model || '').toLowerCase().includes(lq)
+    );
+    renderInkoop(filtered);
+  }
+}
+
+// ── NOTIFICATION ───────────────────────────────────────────────────────────
+function showNotif(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `notif ${type}`;
+  el.innerHTML = `${type === 'success' ? 'OK' : '!'} ${msg}`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>
